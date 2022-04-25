@@ -6,6 +6,7 @@
   <title> JOIN WebRTC channel </title>
   <link href="noserv.css" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="src/connector.js"></script>
 </head>
 
@@ -23,6 +24,7 @@
     <div id="ct"><input id="msg" disabled><button id="send" disabled>send</button></div>
   </div>
   <rtc-connector debug></rtc-connector>
+  <div id="qrcode"></div>
   <script>
     const connector = document.querySelector('rtc-connector');
 
@@ -34,8 +36,13 @@
 
     connector.addEventListener("message", (e) => addMSG(e.detail.message, "other"));
 
+    let qrcode = new QRCode(document.getElementById("qrcode"));
+
     connector.addEventListener("localdescriptionchange", (e) => {
-      $("#joiner-sdp").val(JSON.stringify({answerDesc: e.detail.localDescription}));
+      let s = JSON.stringify({answerDesc: e.detail.localDescription});
+      $("#joiner-sdp").val(s);
+      qrcode.clear();
+      qrcode.makeCode(s);
     });
 
     connector.addEventListener("iceconnectionstatechange", (e) => {

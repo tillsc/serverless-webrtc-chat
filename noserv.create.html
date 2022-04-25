@@ -7,6 +7,7 @@
   <link href="noserv.css" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
   <script src="src/connector.js"></script>
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 </head>
 
 <body>
@@ -23,6 +24,8 @@
     <div id="ct"><input id="msg" disabled><button id="send" disabled>send</button></div>
   </div>
   <rtc-connector debug></rtc-connector>
+
+  <div id="reader" width="100%"></div>
   <script>
     const connector = document.querySelector('rtc-connector');
 
@@ -73,6 +76,29 @@
     $("#accept-answer").click(function () { acceptAnswer(); });
     $("#msg").keypress(function (e) { if (e.which == 13) { sendMSG() } });
     $("#send").click(sendMSG);
+
+    function onScanSuccess(decodedText) {
+      const data = JSON.parse(decodedText);
+      if (data.answerDesc) {
+        connector.acceptAnswer(data.answerDesc);
+      }
+      else {
+        alert("Expected QRcode JSON data to include 'answerDesc' property")
+      }     
+}
+
+function onScanFailure(error) {
+  // handle scan failure, usually better to ignore and keep scanning.
+  // for example:
+  console.warn(`Code scan error = ${error}`);
+}
+
+let html5QrcodeScanner = new Html5QrcodeScanner(
+  "reader",
+  { fps: 10, qrbox: {width: 250, height: 250} },
+  /* verbose= */ false);
+html5QrcodeScanner.render(onScanSuccess, onScanFailure);
+
   </script>
 </body>
 
