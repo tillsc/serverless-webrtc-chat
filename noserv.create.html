@@ -13,7 +13,7 @@
   <h2> CREATE WebRTC channel <span id="status"> init </span></h2>
   <h3> 1.CREATE Offer's SDP </h3>
   <textarea id="creater-sdp"></textarea>
-  <h3> 4.GET Participant's SDP <button id="start">start</button></h3>
+  <h3> 4.GET Participant's SDP <button id="accept-answer">Accept answer</button></h3>
   <textarea id="joiner-sdp" placeholder="HERE COPY AND PASTE [3.Participant'S SDP]"></textarea>
   <h3> CHAT </h3>
   <div id="chat">
@@ -44,7 +44,7 @@
 
     connector.startOffering();
 
-    function start() {
+    function acceptAnswer() {
       const data = JSON.parse($("#joiner-sdp").val());
       if (data.answerDesc) {
         connector.acceptAnswer(data.answerDesc);
@@ -70,7 +70,7 @@
         $("#msg").val('');
       }
     }
-    $("#start").click(function () { start(); });
+    $("#accept-answer").click(function () { acceptAnswer(); });
     $("#msg").keypress(function (e) { if (e.which == 13) { sendMSG() } });
     $("#send").click(sendMSG);
   </script>
