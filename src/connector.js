@@ -20,7 +20,7 @@ class RTCConnector extends HTMLElement {
                 this.fire("connected");
             }
             if (state == "failed") {
-                retryConnection();
+                this.retryConnection();
                 this.fire("iceconnectionstatechange", { state: "retrying" });
             }
         });
@@ -80,7 +80,7 @@ class RTCConnector extends HTMLElement {
         this.initializePeerConnection();
 
         if (this.lastOfferSDPData) {
-            createAnswerSDP(lastOfferSDPData);
+            createAnswerSDP(this.lastOfferSDPData);
         }
     }
 
