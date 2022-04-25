@@ -7,6 +7,7 @@
   <link href="noserv.css" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
   <script src="src/connector.js"></script>
 </head>
 
@@ -24,6 +25,7 @@
     <div id="ct"><input id="msg" disabled><button id="send" disabled>send</button></div>
   </div>
   <rtc-connector debug></rtc-connector>
+  <div id="reader" width="100%"></div>
   <div id="qrcode"></div>
   <script>
     const connector = document.querySelector('rtc-connector');
@@ -39,7 +41,7 @@
     let qrcode = new QRCode(document.getElementById("qrcode"));
 
     connector.addEventListener("localdescriptionchange", (e) => {
-      let s = JSON.stringify({answerDesc: e.detail.localDescription});
+      let s = JSON.stringify({ answerDesc: e.detail.localDescription });
       $("#joiner-sdp").val(s);
       qrcode.clear();
       qrcode.makeCode(s);
@@ -75,6 +77,29 @@
       $("<span>").html(msg).addClass("msg").appendTo(div);
       $("#chat-screen-wp").scrollTop($("#chat-screen").height());
     }
+
+
+    function onScanSuccess(decodedText) {
+      const data = JSON.parse(decodedText);
+      if (data.offerDesc) {
+        connector.acceptOfferAndCreateAnswer(data.offerDesc);
+      }
+      else {
+        alert("Expected QRcode JSON data to include 'offerDesc' property")
+      }
+    }
+
+    function onScanFailure(error) {
+      // handle scan failure, usually better to ignore and keep scanning.
+      // for example:
+      console.warn(`Code scan error = ${error}`);
+    }
+
+    let html5QrcodeScanner = new Html5QrcodeScanner(
+      "reader",
+      { fps: 10, qrbox: { width: 250, height: 250 } },
+  /* verbose= */ false);
+    html5QrcodeScanner.render(onScanSuccess, onScanFailure);
 
     $("#create").click(createAnswerSDP);
     $("#msg").keypress(function (e) { if (e.which == 13) { sendMSG() } });

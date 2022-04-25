@@ -6,8 +6,9 @@
   <title> CREATE WebRTC channel </title>
   <link href="noserv.css" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
-  <script src="src/connector.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+  <script src="src/connector.js"></script>
 </head>
 
 <body>
@@ -24,7 +25,7 @@
     <div id="ct"><input id="msg" disabled><button id="send" disabled>send</button></div>
   </div>
   <rtc-connector debug></rtc-connector>
-
+  <div id="qrcode"></div>
   <div id="reader" width="100%"></div>
   <script>
     const connector = document.querySelector('rtc-connector');
@@ -37,8 +38,13 @@
 
     connector.addEventListener("message", (e) => addMSG(e.detail.message, "other"));
 
+    let qrcode = new QRCode(document.getElementById("qrcode"));
+
     connector.addEventListener("localdescriptionchange", (e) => {
-      $("#creater-sdp").val(JSON.stringify({ offerDesc: e.detail.localDescription }));
+      let s = JSON.stringify({ offerDesc: e.detail.localDescription });
+      $("#creater-sdp").val(s);
+      qrcode.clear();
+      qrcode.makeCode(s);
     });
 
     connector.addEventListener("iceconnectionstatechange", (e) => {
@@ -84,20 +90,20 @@
       }
       else {
         alert("Expected QRcode JSON data to include 'answerDesc' property")
-      }     
-}
+      }
+    }
 
-function onScanFailure(error) {
-  // handle scan failure, usually better to ignore and keep scanning.
-  // for example:
-  console.warn(`Code scan error = ${error}`);
-}
+    function onScanFailure(error) {
+      // handle scan failure, usually better to ignore and keep scanning.
+      // for example:
+      console.warn(`Code scan error = ${error}`);
+    }
 
-let html5QrcodeScanner = new Html5QrcodeScanner(
-  "reader",
-  { fps: 10, qrbox: {width: 250, height: 250} },
+    let html5QrcodeScanner = new Html5QrcodeScanner(
+      "reader",
+      { fps: 10, qrbox: { width: 250, height: 250 } },
   /* verbose= */ false);
-html5QrcodeScanner.render(onScanSuccess, onScanFailure);
+    html5QrcodeScanner.render(onScanSuccess, onScanFailure);
 
   </script>
 </body>
