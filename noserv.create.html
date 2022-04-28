@@ -38,10 +38,10 @@
 
     connector.addEventListener("message", (e) => addMSG(e.detail.message, "other"));
 
-    let qrcode = new QRCode(document.getElementById("qrcode"));
+    let qrcode = new QRCode(document.getElementById("qrcode"), { width: 750, height: 750});
 
     connector.addEventListener("localdescriptionchange", (e) => {
-      let s = JSON.stringify({ offerDesc: e.detail.localDescription });
+      let s = JSON.stringify(e.detail.localDescription);
       $("#creater-sdp").val(s);
       qrcode.clear();
       qrcode.makeCode(s);
@@ -55,11 +55,11 @@
 
     function acceptAnswer() {
       const data = JSON.parse($("#joiner-sdp").val());
-      if (data.answerDesc) {
-        connector.acceptAnswer(data.answerDesc);
+      if (data.type == "answer") {
+        connector.acceptAnswer(data);
       }
       else {
-        alert("Expected JSON to include 'answerDesc' property")
+        alert("Expected JSON to be of type 'answer'")
       }
     }
 
@@ -85,11 +85,11 @@
 
     function onScanSuccess(decodedText) {
       const data = JSON.parse(decodedText);
-      if (data.answerDesc) {
-        connector.acceptAnswer(data.answerDesc);
+      if (data.type == 'answer') {
+        connector.acceptAnswer(data);
       }
       else {
-        alert("Expected QRcode JSON data to include 'answerDesc' property")
+        alert("Expected QRcode JSON to be of type 'answer'")
       }
     }
 
@@ -101,7 +101,7 @@
 
     let html5QrcodeScanner = new Html5QrcodeScanner(
       "reader",
-      { fps: 10, qrbox: { width: 250, height: 250 } },
+      { fps: 10, qrbox: { width: 700, height: 700 } },
   /* verbose= */ false);
     html5QrcodeScanner.render(onScanSuccess, onScanFailure);
 
