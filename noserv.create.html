@@ -31,6 +31,7 @@
     const connector = document.querySelector('rtc-connector');
 
     connector.addEventListener("opened", () => {
+      qrcode.clear();
       $("textarea").attr("disabled", true);
       $("#msg, #send").attr("disabled", false);
       addMSG("CONNECTED!", "info")
@@ -56,6 +57,7 @@
     function acceptAnswer() {
       const data = JSON.parse($("#joiner-sdp").val());
       if (data.type == "answer") {
+        qrcode.clear(); 
         connector.acceptAnswer(data);
       }
       else {
@@ -86,6 +88,7 @@
     function onScanSuccess(decodedText) {
       const data = JSON.parse(decodedText);
       if (data.type == 'answer') {
+        html5QrcodeScanner.stop();
         connector.acceptAnswer(data);
       }
       else {
