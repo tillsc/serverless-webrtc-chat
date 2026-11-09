@@ -13,6 +13,7 @@
 
 <body>
   <h2> CREATE WebRTC channel <span id="status"> init </span></h2>
+  <p><label><input type="checkbox" id="strip-candidates"> Strip unused ICE candidates (smaller QR code, experimental)</label></p>
   <h3> 1.CREATE Offer's SDP </h3>
   <textarea id="creater-sdp"></textarea>
   <h3> 4.GET Participant's SDP <button id="accept-answer">Accept answer</button></h3>
@@ -41,12 +42,22 @@
 
     let qrcode = new QRCode(document.getElementById("qrcode"), { width: 750, height: 750, correctLevel: QRCode.CorrectLevel.L });
 
-    connector.addEventListener("localdescriptionchange", (e) => {
-      let s = JSON.stringify(e.detail.localDescription);
+    let lastLocalDescription = null;
+
+    async function renderOfferSDP() {
+      if (!lastLocalDescription) return;
+      let s = await encodeSDP(lastLocalDescription, { stripUnusedCandidates: document.getElementById("strip-candidates").checked });
       $("#creater-sdp").val(s);
       qrcode.clear();
       qrcode.makeCode(s);
+    }
+
+    connector.addEventListener("localdescriptionchange", (e) => {
+      lastLocalDescription = e.detail.localDescription;
+      renderOfferSDP();
     });
+
+    document.getElementById("strip-candidates").addEventListener("change", renderOfferSDP);
 
     connector.addEventListener("iceconnectionstatechange", (e) => {
       $('#status').html(e.detail.state);
@@ -54,8 +65,8 @@
 
     connector.startOffering();
 
-    function acceptAnswer() {
-      const data = JSON.parse($("#joiner-sdp").val());
+    async function acceptAnswer() {
+      const data = await decodeSDP($("#joiner-sdp").val());
       if (data.type == "answer") {
         qrcode.clear();
         connector.acceptAnswer(data);
