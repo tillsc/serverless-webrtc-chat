@@ -39,7 +39,7 @@
 
     connector.addEventListener("message", (e) => addMSG(e.detail.message, "other"));
 
-    let qrcode = new QRCode(document.getElementById("qrcode"), { width: 750, height: 750});
+    let qrcode = new QRCode(document.getElementById("qrcode"), { width: 750, height: 750 });
 
     connector.addEventListener("localdescriptionchange", (e) => {
       let s = JSON.stringify(e.detail.localDescription);
@@ -81,15 +81,10 @@
 
 
     function onScanSuccess(decodedText) {
-      console.log('decoded qr code:', decodedText);
-      const data = JSON.parse(decodedText);
-      if (data.type == 'offer') {
-        html5QrcodeScanner.stop()
-        connector.acceptOfferAndCreateAnswer(data);
-      }
-      else {
-        alert("Expected QRcode JSON data to be of type 'offer'")
-      }
+      html5QrcodeScanner.stop().then(() => {
+        $("#creater-sdp").val(decodedText);
+        createAnswerSDP();
+      });
     }
 
     function onScanFailure(error) {
@@ -100,7 +95,7 @@
 
     let html5QrcodeScanner = new Html5QrcodeScanner(
       "reader",
-      { fps: 10, qrbox: { width: 700, height: 700 } },
+      { fps: 10, qrbox: { width: 300, height: 300 } },
   /* verbose= */ false);
     html5QrcodeScanner.render(onScanSuccess, onScanFailure);
 
