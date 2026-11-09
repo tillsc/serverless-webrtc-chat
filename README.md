@@ -1,4 +1,5 @@
 # Serverless WebRTC Chat
 
-* DEMO : https://owebio.github.io/serverless-webrtc-chat/
-* YOUTUBE : https://youtu.be/NEuialr6F5A
+* DEMO : https://tillsc.github.io/serverless-webrtc-chat/
+
+Fork of [owebio/serverless-webrtc-chat](https://github.com/owebio/serverless-webrtc-chat).
