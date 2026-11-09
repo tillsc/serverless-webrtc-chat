@@ -39,7 +39,7 @@
 
     connector.addEventListener("message", (e) => addMSG(e.detail.message, "other"));
 
-    let qrcode = new QRCode(document.getElementById("qrcode"), { width: 750, height: 750 });
+    let qrcode = new QRCode(document.getElementById("qrcode"), { width: 750, height: 750, correctLevel: QRCode.CorrectLevel.L });
 
     connector.addEventListener("localdescriptionchange", (e) => {
       let s = JSON.stringify(e.detail.localDescription);
