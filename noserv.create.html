@@ -134,7 +134,7 @@
     document.getElementById("send").addEventListener("click", sendMSG);
 
     function onScanSuccess(decodedText) {
-      html5QrcodeScanner.stop().then(() => {
+      html5QrcodeScanner.clear().then(() => {
         document.getElementById("joiner-sdp").value = decodedText;
         acceptAnswer();
       });

@@ -156,7 +156,7 @@
     }
 
     function onScanSuccess(decodedText) {
-      html5QrcodeScanner.stop().then(() => {
+      html5QrcodeScanner.clear().then(() => {
         document.getElementById("creater-sdp").value = decodedText;
         createAnswerSDP();
       });
