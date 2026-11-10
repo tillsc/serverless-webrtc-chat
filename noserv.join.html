@@ -15,7 +15,7 @@
   <p><label><input type="checkbox" id="strip-candidates"> Strip unused ICE candidates (smaller QR code, experimental)</label></p>
   <h3> 2.GET Offer's SDP</h3>
   <textarea id="creater-sdp" placeholder="HERE COPY & PASTE [1.CREATE Offer's SDP]"></textarea>
-  <h3> 3.CREATE Participant'S SDP <button id="create">CREATE</button> </h3>
+  <h3> 3.CREATE Participant'S SDP <button id="create">CREATE</button> <span id="answer-countdown"></span></h3>
   <textarea id="joiner-sdp"></textarea>
   <h3> CHAT </h3>
   <div id="chat">
@@ -36,6 +36,8 @@
       document.getElementById("msg").disabled = false;
       document.getElementById("send").disabled = false;
       addMSG("CONNECTED!", "info")
+      clearInterval(countdownTimer);
+      document.getElementById("answer-countdown").textContent = "";
     });
 
     connector.addEventListener("message", (e) => addMSG(e.detail.message, "other"));
@@ -44,12 +46,40 @@
 
     let lastLocalDescription = null;
 
+    // How long an answer stays valid before ICE gives up isn't exposed by any
+    // browser API. We measure it ourselves: once a "failed" happens, we know
+    // how long that attempt actually lasted, and reuse that as the estimate
+    // for the next countdown (this seems to stay fairly constant per browser/network).
+    let answerGeneratedAt = null;
+    let estimatedValidityMs = null;
+    let countdownTimer = null;
+
+    function startCountdown() {
+      clearInterval(countdownTimer);
+      const el = document.getElementById("answer-countdown");
+      if (!estimatedValidityMs) {
+        el.textContent = "";
+        return;
+      }
+      countdownTimer = setInterval(() => {
+        const remaining = estimatedValidityMs - (Date.now() - answerGeneratedAt);
+        if (remaining <= 0) {
+          el.textContent = "(likely expired)";
+          clearInterval(countdownTimer);
+        } else {
+          el.textContent = `(valid for ~${Math.ceil(remaining / 1000)}s)`;
+        }
+      }, 250);
+    }
+
     async function renderAnswerSDP() {
       if (!lastLocalDescription) return;
       let s = await encodeSDP(lastLocalDescription, { stripUnusedCandidates: document.getElementById("strip-candidates").checked });
       document.getElementById("joiner-sdp").value = s;
       qrcode.clear();
       qrcode.makeCode(s);
+      answerGeneratedAt = Date.now();
+      startCountdown();
     }
 
     connector.addEventListener("localdescriptionchange", (e) => {
@@ -61,6 +91,9 @@
 
     connector.addEventListener("iceconnectionstatechange", (e) => {
       document.getElementById("status").textContent = e.detail.state;
+      if (e.detail.state === "failed" && answerGeneratedAt) {
+        estimatedValidityMs = Date.now() - answerGeneratedAt;
+      }
     });
 
     // offerData lets connector.js's retry pass the original offer directly,
