@@ -12,11 +12,11 @@
 
 <body>
   <h2> CREATE WebRTC channel <span id="status"> init </span></h2>
-  <p><label><input type="checkbox" id="strip-candidates"> Strip unused ICE candidates (smaller QR code, experimental)</label></p>
-  <h3> 1.CREATE Offer's SDP </h3>
+  <p><label><input type="checkbox" id="strip-candidates"> Smaller QR code (experimental)</label></p>
+  <h3> 1. Share this code with your partner <button id="copy-offer">Copy</button></h3>
   <textarea id="creater-sdp" readonly></textarea>
-  <h3> 4.GET Participant's SDP <button id="accept-answer">Accept answer</button></h3>
-  <textarea id="joiner-sdp" placeholder="HERE COPY AND PASTE [3.Participant'S SDP]"></textarea>
+  <h3> 2. Paste your partner's reply code <button id="accept-answer">Accept answer</button></h3>
+  <textarea id="joiner-sdp" placeholder="Paste your partner's reply code here"></textarea>
   <h3> CHAT </h3>
   <div id="chat">
     <div id="chat-screen-wp">
@@ -59,8 +59,18 @@
 
     document.getElementById("strip-candidates").addEventListener("change", renderOfferSDP);
 
+    const STATUS_LABELS = {
+      new: "Waiting for partner...",
+      checking: "Connecting...",
+      connected: "Connected",
+      completed: "Connected",
+      disconnected: "Connection lost",
+      failed: "Connection failed",
+      closed: "Closed",
+    };
+
     connector.addEventListener("iceconnectionstatechange", (e) => {
-      document.getElementById("status").textContent = e.detail.state;
+      document.getElementById("status").textContent = STATUS_LABELS[e.detail.state] || e.detail.state;
       if (e.detail.state === "failed") {
         addMSG("Connection failed - the participant's SDP may have expired. Ask them to send a fresh one.", "error");
       }
@@ -112,7 +122,14 @@
         document.getElementById("msg").value = '';
       }
     }
+    document.getElementById("copy-offer").addEventListener("click", async () => {
+      await navigator.clipboard.writeText(document.getElementById("creater-sdp").value);
+      const btn = document.getElementById("copy-offer");
+      btn.textContent = "Copied!";
+      setTimeout(() => { btn.textContent = "Copy"; }, 1500);
+    });
     document.getElementById("accept-answer").addEventListener("click", () => acceptAnswer());
+    document.getElementById("joiner-sdp").addEventListener("paste", () => setTimeout(() => acceptAnswer(), 0));
     document.getElementById("msg").addEventListener("keypress", function (e) { if (e.which == 13) { sendMSG() } });
     document.getElementById("send").addEventListener("click", sendMSG);
 

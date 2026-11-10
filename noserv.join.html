@@ -12,10 +12,10 @@
 
 <body>
   <h2> JOIN WebRTC channel <span id="status"> init </span> </h2>
-  <p><label><input type="checkbox" id="strip-candidates"> Strip unused ICE candidates (smaller QR code, experimental)</label></p>
-  <h3> 2.GET Offer's SDP</h3>
-  <textarea id="creater-sdp" placeholder="HERE COPY & PASTE [1.CREATE Offer's SDP]"></textarea>
-  <h3> 3.CREATE Participant'S SDP <button id="create">CREATE</button> <span id="answer-countdown"></span></h3>
+  <p><label><input type="checkbox" id="strip-candidates"> Smaller QR code (experimental)</label></p>
+  <h3> 1. Paste the code your partner shared</h3>
+  <textarea id="creater-sdp" placeholder="Paste the code your partner shared here"></textarea>
+  <h3> 2. Create your reply code <button id="create">CREATE</button> <button id="copy-answer">Copy</button> <span id="answer-countdown"></span></h3>
   <textarea id="joiner-sdp" readonly></textarea>
   <h3> CHAT </h3>
   <div id="chat">
@@ -90,8 +90,18 @@
 
     document.getElementById("strip-candidates").addEventListener("change", renderAnswerSDP);
 
+    const STATUS_LABELS = {
+      new: "Waiting for partner...",
+      checking: "Connecting...",
+      connected: "Connected",
+      completed: "Connected",
+      disconnected: "Connection lost",
+      failed: "Expired, retrying...",
+      closed: "Closed",
+    };
+
     connector.addEventListener("iceconnectionstatechange", (e) => {
-      document.getElementById("status").textContent = e.detail.state;
+      document.getElementById("status").textContent = STATUS_LABELS[e.detail.state] || e.detail.state;
       if (e.detail.state === "failed" && answerGeneratedAt) {
         estimatedValidityMs = Date.now() - answerGeneratedAt;
       }
@@ -164,7 +174,14 @@
   /* verbose= */ false);
     html5QrcodeScanner.render(onScanSuccess, onScanFailure);
 
+    document.getElementById("copy-answer").addEventListener("click", async () => {
+      await navigator.clipboard.writeText(document.getElementById("joiner-sdp").value);
+      const btn = document.getElementById("copy-answer");
+      btn.textContent = "Copied!";
+      setTimeout(() => { btn.textContent = "Copy"; }, 1500);
+    });
     document.getElementById("create").addEventListener("click", () => createAnswerSDP());
+    document.getElementById("creater-sdp").addEventListener("paste", () => setTimeout(() => createAnswerSDP(), 0));
     document.getElementById("msg").addEventListener("keypress", function (e) { if (e.which == 13) { sendMSG() } });
     document.getElementById("send").addEventListener("click", sendMSG);
   </script>
