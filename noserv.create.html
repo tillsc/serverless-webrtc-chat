@@ -14,7 +14,7 @@
   <h2> CREATE WebRTC channel <span id="status"> init </span></h2>
   <p><label><input type="checkbox" id="strip-candidates"> Strip unused ICE candidates (smaller QR code, experimental)</label></p>
   <h3> 1.CREATE Offer's SDP </h3>
-  <textarea id="creater-sdp"></textarea>
+  <textarea id="creater-sdp" readonly></textarea>
   <h3> 4.GET Participant's SDP <button id="accept-answer">Accept answer</button></h3>
   <textarea id="joiner-sdp" placeholder="HERE COPY AND PASTE [3.Participant'S SDP]"></textarea>
   <h3> CHAT </h3>
@@ -61,18 +61,27 @@
 
     connector.addEventListener("iceconnectionstatechange", (e) => {
       document.getElementById("status").textContent = e.detail.state;
+      if (e.detail.state === "failed") {
+        addMSG("Connection failed - the participant's SDP may have expired. Ask them to send a fresh one.", "error");
+      }
     });
 
     connector.startOffering();
 
     async function acceptAnswer() {
-      const data = await decodeSDP(document.getElementById("joiner-sdp").value);
+      let data;
+      try {
+        data = await decodeSDP(document.getElementById("joiner-sdp").value);
+      } catch (err) {
+        addMSG("Could not read the participant's SDP - check that you copied the full code.", "error");
+        return;
+      }
       if (data.type == "answer") {
         qrcode.clear();
         connector.acceptAnswer(data);
       }
       else {
-        alert("Expected JSON to be of type 'answer'")
+        addMSG("Expected the participant's SDP to be of type 'answer'.", "error");
       }
     }
 

@@ -16,7 +16,7 @@
   <h3> 2.GET Offer's SDP</h3>
   <textarea id="creater-sdp" placeholder="HERE COPY & PASTE [1.CREATE Offer's SDP]"></textarea>
   <h3> 3.CREATE Participant'S SDP <button id="create">CREATE</button> <span id="answer-countdown"></span></h3>
-  <textarea id="joiner-sdp"></textarea>
+  <textarea id="joiner-sdp" readonly></textarea>
   <h3> CHAT </h3>
   <div id="chat">
     <div id="chat-screen-wp">
@@ -80,6 +80,7 @@
       qrcode.makeCode(s);
       answerGeneratedAt = Date.now();
       startCountdown();
+      addMSG("New code ready - copy or scan it now.", "success");
     }
 
     connector.addEventListener("localdescriptionchange", (e) => {
@@ -99,12 +100,20 @@
     // offerData lets connector.js's retry pass the original offer directly,
     // instead of relying on the textarea still holding it unchanged.
     async function createAnswerSDP(offerData) {
-      const data = offerData || await decodeSDP(document.getElementById("creater-sdp").value);
+      let data = offerData;
+      if (!data) {
+        try {
+          data = await decodeSDP(document.getElementById("creater-sdp").value);
+        } catch (err) {
+          addMSG("Could not read the offer's SDP - check that you copied the full code.", "error");
+          return;
+        }
+      }
       if (data.type == 'offer') {
         connector.acceptOfferAndCreateAnswer(data);
       }
       else {
-        alert("Expected JSON to be of type 'offer'")
+        addMSG("Expected the offer's SDP to be of type 'offer'.", "error");
       }
     }
 
