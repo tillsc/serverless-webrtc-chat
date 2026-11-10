@@ -5,7 +5,6 @@
   <meta charset="utf-8">
   <title> JOIN WebRTC channel </title>
   <link href="noserv.css" rel="stylesheet">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
   <script src="src/connector.js"></script>
@@ -33,8 +32,9 @@
 
     connector.addEventListener("opened", () => {
       qrcode.clear();
-      $("textarea").attr("disabled", true);
-      $("#msg, #send").attr("disabled", false);
+      document.querySelectorAll("textarea").forEach(t => t.disabled = true);
+      document.getElementById("msg").disabled = false;
+      document.getElementById("send").disabled = false;
       addMSG("CONNECTED!", "info")
     });
 
@@ -47,7 +47,7 @@
     async function renderAnswerSDP() {
       if (!lastLocalDescription) return;
       let s = await encodeSDP(lastLocalDescription, { stripUnusedCandidates: document.getElementById("strip-candidates").checked });
-      $("#joiner-sdp").val(s);
+      document.getElementById("joiner-sdp").value = s;
       qrcode.clear();
       qrcode.makeCode(s);
     }
@@ -60,11 +60,13 @@
     document.getElementById("strip-candidates").addEventListener("change", renderAnswerSDP);
 
     connector.addEventListener("iceconnectionstatechange", (e) => {
-      $('#status').html(e.detail.state);
+      document.getElementById("status").textContent = e.detail.state;
     });
 
-    async function createAnswerSDP() {
-      const data = await decodeSDP($("#creater-sdp").val());
+    // offerData lets connector.js's retry pass the original offer directly,
+    // instead of relying on the textarea still holding it unchanged.
+    async function createAnswerSDP(offerData) {
+      const data = offerData || await decodeSDP(document.getElementById("creater-sdp").value);
       if (data.type == 'offer') {
         connector.acceptOfferAndCreateAnswer(data);
       }
@@ -74,26 +76,36 @@
     }
 
     function sendMSG() {
-      var value = $("#msg").val();
+      var value = document.getElementById("msg").value;
       if (value) {
         connector.send(value);
         addMSG(value, "me");
-        $("#msg").val('');
+        document.getElementById("msg").value = '';
       }
     }
 
     function addMSG(msg, who) {
-      var wrap = $("<div>").addClass("wrap").appendTo($("#chat-screen"));
-      var div = $("<div>").addClass(who).appendTo(wrap);
-      $("<span>").html(who).addClass("who").appendTo(div);
-      $("<span>").html(msg).addClass("msg").appendTo(div);
-      $("#chat-screen-wp").scrollTop($("#chat-screen").height());
+      var wrap = document.createElement("div");
+      wrap.className = "wrap";
+      var div = document.createElement("div");
+      div.className = who;
+      wrap.appendChild(div);
+      var whoSpan = document.createElement("span");
+      whoSpan.className = "who";
+      whoSpan.textContent = who;
+      div.appendChild(whoSpan);
+      var msgSpan = document.createElement("span");
+      msgSpan.className = "msg";
+      msgSpan.textContent = msg;
+      div.appendChild(msgSpan);
+      var chatScreen = document.getElementById("chat-screen");
+      chatScreen.appendChild(wrap);
+      document.getElementById("chat-screen-wp").scrollTop = chatScreen.scrollHeight;
     }
-
 
     function onScanSuccess(decodedText) {
       html5QrcodeScanner.stop().then(() => {
-        $("#creater-sdp").val(decodedText);
+        document.getElementById("creater-sdp").value = decodedText;
         createAnswerSDP();
       });
     }
@@ -110,9 +122,9 @@
   /* verbose= */ false);
     html5QrcodeScanner.render(onScanSuccess, onScanFailure);
 
-    $("#create").click(createAnswerSDP);
-    $("#msg").keypress(function (e) { if (e.which == 13) { sendMSG() } });
-    $("#send").click(sendMSG);
+    document.getElementById("create").addEventListener("click", () => createAnswerSDP());
+    document.getElementById("msg").addEventListener("keypress", function (e) { if (e.which == 13) { sendMSG() } });
+    document.getElementById("send").addEventListener("click", sendMSG);
   </script>
 </body>
 
